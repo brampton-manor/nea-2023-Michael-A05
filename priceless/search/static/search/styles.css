@@ -1,0 +1,61 @@
+/* styles.css */
+
+/* Custom styles for the search form */
+.search-form {
+    margin-bottom: 20px; /* Add spacing below the search form */
+    display: flex; /* Use flexbox layout */
+}
+
+.search-input {
+    flex: 1; /* Take up remaining space in the flex container */
+    padding: 10px; /* Add padding to the input field */
+    border: 1px solid #ccc; /* Add a border */
+    border-radius: 5px; /* Round the corners */
+    font-size: 16px; /* Adjust font size */
+}
+
+.search-button {
+    background-color: #4CAF50; /* Green background color */
+    color: white; /* White text color */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Round the corners */
+    padding: 10px 20px; /* Add padding */
+    margin-left: 10px; /* Add spacing between input field and button */
+    cursor: pointer; /* Add pointer cursor on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add box shadow */
+}
+
+.search-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+.search-results-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Adjust the gap between search result boxes */
+}
+
+.search-result-box {
+    width: 200px; /* Set the width of each search result box */
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.search-result-box img {
+    width: 100%; /* Make the image fill the container */
+    height: auto; /* Maintain aspect ratio */
+    max-width: 100%; /* Ensure image doesn't exceed container width */
+    max-height: 100px; /* Set maximum height for images */
+    display: block; /* Prevent inline layout */
+    margin-bottom: 10px; /* Add space below image */
+}
+
+.search-result-box h2 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.search-result-box p {
+    font-size: 14px;
+    margin: 0;
+}

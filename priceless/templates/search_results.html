@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Search Results{% endblock %}
+{% block content %}
+    <h1>Search Results for "{{ query }}"</h1>
+    
+    <h2>Results without allergens:</h2>
+    {% if grouped_results_without_allergens %}
+        {% for name, products in grouped_results_without_allergens %}
+            <h3>{{ name }}</h3>
+            <div class="search-results-container">
+                {% for product in products %}
+                    <div class="search-result-box {% if product.is_cheaper %}cheaper{% endif %}">
+                        <img src="{{ product.logo_url }}" alt="Supermarket Logo">
+                        <img src="{{ product.product_image }}" alt="{{ product.product_name }}">
+                        <h2>{{ product.product_name }}</h2>
+                        <p>Price: {{ product.product_price }}</p>
+                        <a href="{{ product.product_url }}">More details</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No results found without allergens.</p>
+    {% endif %}
+
+    <h2>Results with allergens:</h2>
+    {% if grouped_results_with_allergens %}
+        {% for name, products in grouped_results_with_allergens %}
+            <h3>{{ name }}</h3>
+            <div class="search-results-container">
+                {% for product in products %}
+                    <div class="search-result-box {% if product.is_cheaper %}cheaper{% endif %}">
+                        <img src="{{ product.logo_url }}" alt="Supermarket Logo">
+                        <img src="{{ product.product_image }}" alt="{{ product.product_name }}">
+                        <h2>{{ product.product_name }}</h2>
+                        <p>Price: {{ product.product_price }}</p>
+                        <a href="{{ product.product_url }}">More details</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No results found with allergens.</p>
+    {% endif %}
+{% endblock %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'search/styles.css' %}">
