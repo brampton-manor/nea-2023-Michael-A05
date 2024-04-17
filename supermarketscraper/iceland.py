@@ -59,7 +59,7 @@ class Iceland(Supermarkets):
                             product['price'] = product_price
                     for product_part_url in divtag.find_all('a', {'class': 'name-link'}):
                         product['part_url'] = product_part_url.get('href').replace(self.base_url, "")
-                    for product_image in divtag.find_all('img'):                # error here, iceland uses lazy loading
+                    for product_image in divtag.find_all('img'):  # error here, iceland uses lazy loading
                         product['image'] = product_image.get('src')
                     supermarket_category_products.append(product)
                 return supermarket_category_products
@@ -70,12 +70,54 @@ class Iceland(Supermarkets):
             log.error(f"Page was not found: product html for {self.name} was not passed correctly")
             return []
 
-from scraper import Scraper
+    def filter_product_details(self, html):
+        if html is not None:
 
-scraper = Scraper(supermarkets=None, database=None)
-iceland = Iceland()
-url = "https://www.iceland.co.uk/frozen"
-html = scraper.get_html(url)
-iceland.filter_categories(html)
-x = iceland.filter_categories(html)
-print(x)
+            soup = BeautifulSoup(html, "html.parser")
+            allergy_list = []
+
+            try:
+                divtag = soup.find('div', {'class': 'mt-3'})
+                for ptag in divtag.find_all('p', {'class': 'text-muted'}):
+                    allergen_text = ptag.get_text(strip=True)
+                    for allergen in self.allergens:
+                        if allergen_text.lower().find(allergen) >= 0:
+                            allergy_list.append(allergen)
+
+                    allergy_list = list(set(allergy_list))
+
+                nutrition_table = soup.find('tbody')
+                nutritional_values = []
+                for row in nutrition_table.find_all('tr'):
+                    cols = row.find_all('td')
+                    if len(cols) >= 2:
+                        #   nutrient = cols[0].get_text(strip=True)
+                        value_per_100g = cols[2].get_text(strip=True)
+                        if value_per_100g != '':
+                            nutritional_values.append(value_per_100g)
+                nutritional_values = self.format_nutritional_information(nutritional_values)
+                product_details = self.assign_product_values(nutritional_values, allergy_list)
+                if product_details is None:
+                    product_details = self.assign_default_values(allergy_list)
+
+                return product_details if product_details else None
+
+            except Exception as e:
+                log.error(f"Error filtering product details for {self.name}: {e}")
+                return None
+        else:
+            log.error(f"Page was not found: product information html for {self.name} was not passed correctly")
+            return None
+
+    def format_nutritional_information(self, values):
+        try:
+            formatted_values = [values[0].replace("kJ", ""), values[1].replace("kcal", "")]
+            for value in values[2:]:
+                formatted_values.append(value.replace("g", ""))
+            return formatted_values
+
+        except Exception as e:
+            log.error(f"Error formatting values: {e}")
+            formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
+            return formatted_values
+
