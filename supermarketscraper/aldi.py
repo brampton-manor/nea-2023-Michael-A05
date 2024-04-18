@@ -158,42 +158,16 @@ class Aldi(Supermarkets):
             log.warning("Match was not found")
             formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
 
-        return formatted_values
+        formatted_values_x = []
 
-    def assign_product_values(self, nutritional_values, allergens):
-        product_details = {}
+        for value in formatted_values:
+            if "kj" or "kcal" in value:
+                value = value.replace("kj", "")
+                value = value.replace("kcal", "")
+                formatted_values_x.append(value)
 
-        try:
-            energy_kj, energy_kcal, fat, sat_fat, carb, sugars, fibre, protein, salt = nutritional_values
-            product_details['energy_kj'] = float(energy_kj.replace("kj", ""))
-            product_details['energy_kcal'] = float(energy_kcal.replace("kcal", ""))
-            product_details['fat'] = float(fat)
-            product_details['of_which_saturates'] = float(sat_fat)
-            product_details['carbohydrates'] = float(carb)
-            product_details['of_which_sugars'] = float(sugars)
-            product_details['fibre'] = float(fibre)
-            product_details['protein'] = float(protein)
-            product_details['salt'] = float(salt)
-            product_details['allergens'] = list(allergens)
-
-            return product_details
-
-        except ValueError as e:
-            log.error(f"Error processing nutritional values: {e}")
-            return None
-
-        except Exception as ex:
-            log.error(f"An error occurred while trying to process product details for a {self.name} product: {ex}")
-            return None
+        return formatted_values_x
 
     def get_nutrition_pattern(self):
         return (r"(Fat|of which saturates|Carbohydrate|of which sugars|Fibre|Protein|Salt)(\s+[<]?\d+[.]?\d+|\s+\d+)|("
                 r"\d+[.]?[kK][jJ]|\d+[.]?kcal)")
-
-
-scraper = Scraper(supermarkets=None, database=None)
-url = "https://groceries.aldi.co.uk/en-GB/p-village-bakery-toastie-thick-sliced-white-bread-800g/4088600253305"
-html = scraper.get_html(url)
-aldi = Aldi()
-x = aldi.filter_product_details(html)
-print(x)

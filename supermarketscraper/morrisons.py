@@ -131,10 +131,18 @@ class Morrisons(Supermarkets):
                     value_per_100g = cols[1].get_text(strip=True)
                     nutritional_information.append((nutrient, value_per_100g))
             nutritional_information.pop(-1)
-            return [value.replace("g", "") for _, value in nutritional_information]
+            nutritional_information = [value.replace("g", "") for _, value in nutritional_information]
+            separated_energy_information = nutritional_information[0].split("/")
+            nutritional_information = separated_energy_information + nutritional_information[1:]
+            formatted_values = [nutritional_information[0].replace("kJ", ""),
+                                nutritional_information[1].replace("kcal", "")]
+            for value in nutritional_information[2:]:
+                formatted_values.append(value)
+            return formatted_values
         except Exception as e:
             log.error(f"Error trying to format nutritional information for {self.name}: {e}")
-            return []
+            formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
+            return formatted_values
 
     def get_nutrition_pattern(self):
         return (r"([(]?[kK][jJ][)]?|[(]?kcal[)]?|Fat|of which Saturates|Carbohydrate|of which "

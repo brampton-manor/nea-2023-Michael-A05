@@ -83,47 +83,7 @@ class Supermarkets:
         return product_list
 
     def format_nutritional_information(self, nutrition_text):
-        formatted_values = []
-        matches = re.findall(self.nutrition_pattern, nutrition_text)
-
-        if matches:
-            if len(matches) == 2 or len(matches) == 9:
-                nutritional_labels = ["energy_kj", "energy_kcal", "fat", "fat_sat", "carb", "sugars", "fibre",
-                                      "protein",
-                                      "salt"]
-                default_value = 0
-                for label in nutritional_labels:
-                    if label == "energy_kj" or label == "energy_kcal":
-                        try:
-                            value = matches[nutritional_labels.index(label)][2].lower()
-                            if value == '':
-                                log.warning(
-                                    f"Value for {nutritional_labels[nutritional_labels.index(label) + 1]} may be "
-                                    f"incorrect")
-                                raise ValueError
-                            else:
-                                formatted_value = str(value).replace("<", "").strip()
-                                formatted_value = str(formatted_value).replace(".", "").strip()
-                                formatted_values.append(formatted_value)
-                        except ValueError:
-                            log.error(f"Value not found for {label}, setting default value.")
-                            formatted_values.append(str(default_value))
-                    else:
-                        try:
-                            value = matches[nutritional_labels.index(label)][1]
-                            formatted_value = str(value).replace("<", "").strip()
-                            formatted_values.append(formatted_value)
-                        except IndexError:
-                            log.error(f"Value not found for {label}, setting default value.")
-                            formatted_values.append(str(default_value))
-            else:
-                log.warning("Nutritional information was not in valid format")
-                formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
-        else:
-            log.warning("Match was not found")
-            formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
-
-        return formatted_values
+        return ['0', '0', '0', '0', '0', '0', '0', '0', '0']
 
     def get_id(self):
         try:
