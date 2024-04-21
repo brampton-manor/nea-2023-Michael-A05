@@ -14,9 +14,14 @@
                     <div class="search-result-box {% if product.is_cheaper %}cheaper{% endif %}">
                         <img src="{{ product.logo_url }}" alt="Supermarket Logo">
                         <img src="{{ product.product_image }}" alt="{{ product.product_name }}">
-                        <h2>{{ product.product_name }}</h2>
-                        <p>Price: {{ product.product_price }}</p>
+                        <p>Product: {{ product.product_name }}</p>
+                        <p>Price: £{{ product.product_price }}</p>
+                        <p>Supermarket: {{ product.supermarket_category.supermarket.supermarket_name }}</p>
                         <a href="{{ product.product_url }}">More details</a>
+                        <form action="{% url 'add_to_shopping_list' product.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Add to Shopping List</button>
+                        </form>
                     </div>
                 {% endfor %}
             </div>
@@ -34,9 +39,14 @@
                     <div class="search-result-box {% if product.is_cheaper %}cheaper{% endif %}">
                         <img src="{{ product.logo_url }}" alt="Supermarket Logo">
                         <img src="{{ product.product_image }}" alt="{{ product.product_name }}">
-                        <h2>{{ product.product_name }}</h2>
-                        <p>Price: {{ product.product_price }}</p>
+                        <p>Product: {{ product.product_name }}</p>
+                        <p>Price: £{{ product.product_price }}</p>
+                        <p>Supermarket: {{ product.supermarket_category.supermarket.supermarket_name }}</p>
                         <a href="{{ product.product_url }}">More details</a>
+                        <form action="{% url 'add_to_shopping_list' product.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Add to Shopping List</button>
+                        </form>
                     </div>
                 {% endfor %}
             </div>
@@ -45,5 +55,3 @@
         <p>No results found with allergens.</p>
     {% endif %}
 {% endblock %}
-
-<link rel="stylesheet" type="text/css" href="{% static 'search/styles.css' %}">

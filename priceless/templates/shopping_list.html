@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shopping List{% endblock %}
+{% block content %}
+    <h1>Shopping List</h1>
+
+    <h2>Your Shopping List</h2>
+    <ul>
+        {% for item in shopping_items %}
+            <li>
+                {{ item.product.product_name }} - Quantity: {{ item.quantity }}
+                <form action="{% url 'remove_from_shopping_list' item.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Remove</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Comparison Results</h2>
+    {% for product_name, result in comparison_results.items %}
+        <h3>{{ product_name }}</h3>
+        <p>Total in {{ supermarket_names.current_supermarket_id }}: £{{ totals.current_supermarket_id }}</p>
+        {% for supermarket_id, total in totals.items %}
+            {% if supermarket_id != current_supermarket_id %}
+                <p>Total in {{ supermarket_names.supermarket_id }}: £{{ total }}</p>
+            {% endif %}
+        {% endfor %}
+    {% empty %}
+        <p>No comparison results available.</p>
+    {% endfor %}
+{% endblock %}

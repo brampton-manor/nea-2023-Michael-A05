@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
@@ -10,6 +9,7 @@ from .models import Choice, Allergen
 
 # Create your views here.
 
+@login_required(login_url='/accounts/login/')
 def profile(request):
     return render(request, 'user_home.html')
 
@@ -17,16 +17,21 @@ def profile(request):
 @login_required
 def choose_allergens(request):
     user_choices = Choice.objects.filter(user=request.user, chosen=True)
+
     if request.method == 'POST':
         form = AllergenChoiceForm(request.POST, user=request.user)
+
         if form.is_valid():
             form.save(user=request.user)
             return redirect(reverse_lazy('user_page'))
+
     else:
         form = AllergenChoiceForm(user=request.user)
+
     return render(request, 'choose_allergens.html', {'form': form, 'user_choices': user_choices})
 
 
+@login_required
 def remove_allergen(request, choice_id):
     choice = get_object_or_404(Choice, id=choice_id, user=request.user)
     choice.delete()

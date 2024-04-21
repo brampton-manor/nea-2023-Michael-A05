@@ -56,3 +56,4 @@ class SupermarketProductAllergens(models.Model):
 
     class Meta:
         db_table = 'supermarket_product_allergens'
+
