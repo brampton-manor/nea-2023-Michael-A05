@@ -8,10 +8,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 log = logging.getLogger(__name__)
 
 
+# Defining a base class for declarative SQLAlchemy models
 class Base(DeclarativeBase):
     pass
 
 
+# Defining the structure of the supermarkets table in the database
 class Supermarkets(Base):
     __tablename__ = "supermarkets"
 
@@ -21,6 +23,8 @@ class Supermarkets(Base):
     supermarket_base_url: Mapped[str]
 
 
+# Defining the structure of the supermarkets_categories table in the database
+# One-to-many relationship between supermarket objects and supermarket category objects
 class SupermarketCategories(Base):
     __tablename__ = "supermarket_categories"
 
@@ -30,6 +34,8 @@ class SupermarketCategories(Base):
     supermarket_category_part_url: Mapped[str]
 
 
+# Defining the structure of the supermarket_products table in the database
+# One-to-many relationship between supermarket category objects and supermarket product objects
 class SupermarketProducts(Base):
     __tablename__ = "supermarket_products"
 
@@ -44,6 +50,8 @@ class SupermarketProducts(Base):
     is_available: Mapped[bool]
 
 
+# Defining the structure of the supermarket_product_details table in the database
+# One-to-one relationship between supermarket_product objects and supermarket_product_details objects
 class SupermarketProductDetails(Base):
     __tablename__ = "supermarket_product_details"
 
@@ -60,6 +68,8 @@ class SupermarketProductDetails(Base):
     salt: Mapped[float]
 
 
+# Defining the structure of the supermarket_product_allergens table in the database
+# One-to-many relationship between supermarket_product objects and supermarket_product_allergens objects
 class SupermarketProductAllergens(Base):
     __tablename__ = "supermarket_product_allergens"
 
@@ -69,6 +79,8 @@ class SupermarketProductAllergens(Base):
 
 
 class Database:
+    # Database initialisation and connection setup
+    # Logging initialisation
     def __init__(self):
         self.engine = db.create_engine(
             "sqlite:///supermarketscrape.db?check_same_thread=false"
@@ -134,10 +146,12 @@ class Database:
         log.info("Database tables loaded")
 
     def get_table_object(self, table_name):
+        # Method to get metadata object for a given table name
         self.Base.metadata.reflect(self.engine)
         return self.Base.metadata.tables.get(table_name)
 
     def add_supermarket(self, supermarkets):
+        # Method to add supermarket data to the database
         supermarkets_table = self.get_table_object(table_name="supermarkets")
 
         with self.session as session:
@@ -159,6 +173,7 @@ class Database:
             self.session.commit()
 
     def add_supermarket_category(self, data):
+        # Method to add supermarket category data to the database
         categories_table = self.get_table_object(table_name="supermarket_categories")
 
         with self.session as session:
@@ -180,6 +195,7 @@ class Database:
             self.session.commit()
 
     def add_supermarket_category_products(self, data):  # add update_necessary_checking
+        # Method to add supermarket product data to the database
         statistics = {"New": 0, "Updated": 0, "Deleted": 0}
         products_table = self.get_table_object("supermarket_products")
 
@@ -202,6 +218,7 @@ class Database:
             self.session.commit()
 
     def add_product_information(self, data):
+        # Method to add product details to the database
 
         with self.session as session:
             datum = data["supermarket_product_details"]
@@ -221,6 +238,7 @@ class Database:
             self.session.commit()
 
     def add_product_allergy_information(self, data):
+        # Method to add product allergy information to the database
 
         with self.session as session:
             datum = data["supermarket_product_details"]

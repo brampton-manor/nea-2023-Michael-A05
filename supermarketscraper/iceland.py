@@ -7,13 +7,14 @@ log = logging.getLogger(__name__)
 
 
 class Iceland(Supermarkets):
-
     def __init__(self):
+        # Initialise Iceland-specific attributes
         super().__init__()
         self.name = "Iceland"
         self.logo = ("https://www.bing.com/th?id=OIP.nn40kuPZtVCz-7QNSxbVUwHaHa&w=101&h=100&c=8&rs=1&qlt=90&o=6&pid=3"
                      ".1&rm=2")
         self.base_url = "https://www.iceland.co.uk/"
+        log.info(f"{self.name} loaded")
 
     def build_url(self, url, page):
         multiplier = 25
@@ -28,6 +29,8 @@ class Iceland(Supermarkets):
             try:
 
                 for a_tag in soup.find_all('a', {'class': 'menu-sub-cat-link viewall'}):
+
+                    # Extract category name and part-URL
                     hyperlink_string = a_tag.get('href')
                     category = {'name': hyperlink_string.replace(self.base_url, ""),
                                 'part_url': hyperlink_string.replace(self.base_url, "")}
@@ -35,6 +38,7 @@ class Iceland(Supermarkets):
                     supermarket_categories.append(category)
 
                 return supermarket_categories
+
             except Exception as e:
                 log.error(f"Error filtering {self.name} categories: {e}")
                 return []
@@ -50,19 +54,30 @@ class Iceland(Supermarkets):
             try:
                 for divtag in soup.find_all('div', {'class': 'product-tile'}):
                     product = {}
+
+                    # Extract product name
                     for product_name in divtag.find('a', {'class': 'name-link'}):
                         if product_name.string != '\n':
                             product['name'] = product_name.string
+
+                    # Extract product price
                     for product_price in divtag.find('span', {'class': 'product-sales-price'}):
                         if product_price.get_text(strip=True) != '':
                             product_price = self.format_product_price_pound(product_price.get_text())
                             product['price'] = product_price
+
+                    # Extract product part-URL
                     for product_part_url in divtag.find_all('a', {'class': 'name-link'}):
                         product['part_url'] = product_part_url.get('href').replace(self.base_url, "")
+
+                    # Extract product image
                     for product_image in divtag.find_all('img'):  # error here, iceland uses lazy loading
                         product['image'] = product_image.get('src')
+
                     supermarket_category_products.append(product)
+
                 return supermarket_category_products
+
             except Exception as e:
                 log.error(f"Error filtering products for {self.name}: {e}")
                 return []
@@ -72,12 +87,13 @@ class Iceland(Supermarkets):
 
     def filter_product_details(self, html):
         if html is not None:
-
             soup = BeautifulSoup(html, "html.parser")
             allergy_list = []
 
             try:
                 divtag = soup.find('div', {'class': 'mt-3'})
+
+                # Extract product allergens
                 for ptag in divtag.find_all('p', {'class': 'text-muted'}):
                     allergen_text = ptag.get_text(strip=True)
                     for allergen in self.allergens:
@@ -86,17 +102,21 @@ class Iceland(Supermarkets):
 
                     allergy_list = list(set(allergy_list))
 
+                # Extract product nutritional information
                 nutrition_table = soup.find('tbody')
                 nutritional_values = []
+
                 for row in nutrition_table.find_all('tr'):
                     cols = row.find_all('td')
                     if len(cols) >= 2:
-                        #   nutrient = cols[0].get_text(strip=True)
+                        # nutrient = cols[0].get_text(strip=True)
                         value_per_100g = cols[2].get_text(strip=True)
                         if value_per_100g != '':
                             nutritional_values.append(value_per_100g)
+
                 nutritional_values = self.format_nutritional_information(nutritional_values)
                 product_details = self.assign_product_values(nutritional_values, allergy_list)
+
                 if product_details is None:
                     product_details = self.assign_default_values(allergy_list)
 
@@ -120,4 +140,3 @@ class Iceland(Supermarkets):
             log.error(f"Error formatting values: {e}")
             formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
             return formatted_values
-

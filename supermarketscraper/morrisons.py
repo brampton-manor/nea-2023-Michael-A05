@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 
 class Morrisons(Supermarkets):
     def __init__(self):
+        # Initialise Morrisons-specific attributes
         super().__init__()
         self.name = "Morrisons"
         self.logo = "https://groceries.morrisons.com/static/morrisonslogo-fe24a.svg"
@@ -17,6 +18,7 @@ class Morrisons(Supermarkets):
         log.info(f"{self.name} loaded")
 
     def build_url(self, url, page):
+        # Placeholder implementation, not needed for Morrisons
         return False
 
     def filter_categories(self, html):
@@ -27,15 +29,19 @@ class Morrisons(Supermarkets):
             try:
                 for litag in soup.find_all('li', {'class': 'level-item has-children'}):
                     category = {}
+
+                    # Extract category name
                     for category_name in litag.find('a'):
                         category['name'] = category_name
 
+                    # Extract category part-URL
                     for category_part_url in litag.find_all('a', href=True):
                         hyperlink_string = category_part_url.get('href')
                         length = hyperlink_string.find("?")
                         category['part_url'] = hyperlink_string[:length].replace("/browse", "")
 
                     supermarket_categories.append(category)
+
                 supermarket_categories = [dictionary for dictionary in supermarket_categories if dictionary]
                 return supermarket_categories
 
@@ -96,10 +102,12 @@ class Morrisons(Supermarkets):
             soup = BeautifulSoup(html, "html.parser")
             allergy_list = []
             try:
+
                 # Extract product allergens
                 for divtag in soup.find_all('div', {'class': 'bop-info__content'}):
                     allergens_text = divtag.get_text(strip=True)
                     allergens_text = unicodedata.normalize("NFKC", allergens_text)
+
                     for allergen in self.allergens:
                         if allergens_text.lower().find(allergen) >= 0:
                             allergy_list.append(allergen)
@@ -110,8 +118,10 @@ class Morrisons(Supermarkets):
                 nutrients_table = soup.find('tbody')
                 values = self.format_nutritional_information(nutrients_table)
                 product_details = self.assign_product_values(values, allergy_list)
+
                 if product_details is None:
                     product_details = self.assign_default_values(allergy_list)
+
                 return product_details if product_details else None
 
             except Exception as e:
@@ -122,28 +132,45 @@ class Morrisons(Supermarkets):
             return None
 
     def format_nutritional_information(self, nutrition_text):
+        # List to store formatted nutritional information
         nutritional_information = []
         try:
+            # Loop through each row in the table of nutritional information and extract the row's columns
             for row in nutrition_text.find_all('tr'):
                 cols = row.find_all('td')
+
+                # Check that there are at least two columns (nutrient and value)
                 if len(cols) >= 2:
+
+                    # Extract the nutrient name and value per 100g then add the tuple (nutrient, value) to the list
                     nutrient = cols[0].get_text(strip=True)
                     value_per_100g = cols[1].get_text(strip=True)
                     nutritional_information.append((nutrient, value_per_100g))
+
+            # Remove a redundant value from the list
             nutritional_information.pop(-1)
+
+            # Remove 'g' from each value
             nutritional_information = [value.replace("g", "") for _, value in nutritional_information]
+
+            # Split the energy values, remove 'kJ' and 'kcal' then return the formatted list
             separated_energy_information = nutritional_information[0].split("/")
             nutritional_information = separated_energy_information + nutritional_information[1:]
             formatted_values = [nutritional_information[0].replace("kJ", ""),
                                 nutritional_information[1].replace("kcal", "")]
+
             for value in nutritional_information[2:]:
                 formatted_values.append(value)
+
             return formatted_values
+
         except Exception as e:
             log.error(f"Error trying to format nutritional information for {self.name}: {e}")
             formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
             return formatted_values
 
     def get_nutrition_pattern(self):
+        # Regular expression pattern to match nutritional information
         return (r"([(]?[kK][jJ][)]?|[(]?kcal[)]?|Fat|of which Saturates|Carbohydrate|of which "
                 r"Sugars|Fibre|Protein|Salt)([\s]?[<]?\d\d\d|[\s]?[<]?\d+[.]?\d+)")
+

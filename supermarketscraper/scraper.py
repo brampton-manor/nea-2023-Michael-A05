@@ -29,12 +29,15 @@ class Scraper:
         return None
 
     def scrape_cycle(self):
+        # Indices for accessing category information
         category_id_index = 0
         category_part_url_index = 1
         category_name_index = 2
 
+        # Add supermarkets to the database
         self.database.add_supermarket(self.supermarkets)
 
+        # Iterate over supermarkets and add categories to the database
         for supermarket in self.supermarkets:
             log.info(f"Adding {supermarket.name} categories")
             html = self.get_html(url=supermarket.base_url)
@@ -43,52 +46,71 @@ class Scraper:
                 {"supermarket_id": supermarket.get_id(), "supermarket_categories": supermarket_categories}
             )
 
+            # Get the current supermarkets categories and iterate over them
             categories = supermarket.get_categories()
             for category in categories:
                 category_name = category[category_name_index]
-                log.info(f"Retrieving {category_name} products")
+                # Can select which categories to collect data from by using an if statement here
+                wanted_categories = ["bakery", "fresh food", "frozen food", "Bakery & Cakes", "Fresh",
+                                     "Frozen", "fresh", "frozen"]
 
-                category_information = supermarket.get_category_information(category_name)
-                start_page_url = supermarket.base_url + category_information[category_part_url_index]
-                page = 1
-                finished_category = False
+                if category_name in wanted_categories:
+                    if category_name == "bakery" and supermarket.name == "Aldi":
+                        continue
 
-                while not finished_category:
-                    url = supermarket.build_url(url=start_page_url, page=page)
-                    if not url:  # Items are on a single page
+                    log.info(f"Retrieving {category_name} products")
 
-                        html = self.get_html(url=start_page_url)
-                        supermarket_category_products = supermarket.filter_products(html)
-                        self.database.add_supermarket_category_products(
-                            {"supermarket_category_id": category_information[category_id_index],
-                             "supermarket_category_products": supermarket_category_products}
-                        )
-                        finished_category = True
+                    category_information = supermarket.get_category_information(category_name)
+                    start_page_url = supermarket.base_url + category_information[category_part_url_index]
+                    page = 1
+                    finished_category = False
 
-                    else:
-                        html = self.get_page(url=url)
-                        if html is None:
-                            finished_category = True
-                            log.info(f"Moving to next category")
-                        else:
+                    while not finished_category:
+                        url = supermarket.build_url(url=start_page_url, page=page)
+
+                        if not url:
+                            # Get the category products if they are shown on a single page e.g. Morrisons
+                            html = self.get_html(url=start_page_url)
                             supermarket_category_products = supermarket.filter_products(html)
                             self.database.add_supermarket_category_products(
                                 {"supermarket_category_id": category_information[category_id_index],
                                  "supermarket_category_products": supermarket_category_products}
                             )
-                            page += 1
+                            finished_category = True
+
+                        else:
+                            html = self.get_page(url=url)
+
+                            if html is None:
+                                finished_category = True
+                                log.info(f"Moving to next category")
+
+                            else:
+                                # Iterate over the categories pages and get the products
+                                supermarket_category_products = supermarket.filter_products(html)
+                                self.database.add_supermarket_category_products(
+                                    {"supermarket_category_id": category_information[category_id_index],
+                                     "supermarket_category_products": supermarket_category_products}
+                                )
+                                page += 1
 
                     if finished_category:
-                        supermarket_products_object = self.database.get_table_object("supermarket_products")
-                        products = self.database.session.query(supermarket_products_object).filter_by(
+                        # Retrieve the products table and query all the products belonging to the current category
+                        supermarket_products_table = self.database.get_table_object("supermarket_products")
+                        products = self.database.session.query(supermarket_products_table).filter_by(
                             supermarket_category_id=category_information[category_id_index]
                         ).all()
+
+                        # Iterate over each product and extract the products allergen and nutritional information
                         for product in products:
                             product_id, product_part_url = product.id, product.product_part_url
 
+                            # Constructing URL for Morrisons products
                             url = supermarket.base_url.replace("/browse", "") + product_part_url
+
                             html = self.get_html(url=url)
                             supermarket_product_details = supermarket.filter_product_details(html)
+
                             if supermarket_product_details is not None:
                                 try:
                                     self.database.add_product_information(
