@@ -1,4 +1,6 @@
 import logging
+
+import bs4.element
 import unicodedata
 
 from bs4 import BeautifulSoup
@@ -15,13 +17,12 @@ class Morrisons(Supermarkets):
         self.name = "Morrisons"
         self.logo = "https://groceries.morrisons.com/static/morrisonslogo-fe24a.svg"
         self.base_url = "https://groceries.morrisons.com/browse"
-        log.info(f"{self.name} loaded")
 
-    def build_url(self, url, page):
+    def build_url(self, url: str, page: int) -> str:
         # Placeholder implementation, not needed for Morrisons
-        return False
+        return ""
 
-    def filter_categories(self, html):
+    def filter_categories(self, html: str | None) -> list:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             supermarket_categories = []
@@ -38,7 +39,10 @@ class Morrisons(Supermarkets):
                     for category_part_url in litag.find_all('a', href=True):
                         hyperlink_string = category_part_url.get('href')
                         length = hyperlink_string.find("?")
-                        category['part_url'] = hyperlink_string[:length].replace("/browse", "")
+
+                        # Filtering is applied partially to bypass website defense
+                        hyperlink_string = hyperlink_string[:length + 1].replace("/browse", "")
+                        category['part_url'] = hyperlink_string.replace("?", "")
 
                     supermarket_categories.append(category)
 
@@ -52,7 +56,7 @@ class Morrisons(Supermarkets):
             log.error(f"Page was not found: category html for {self.name} was not parsed correctly")
             return []
 
-    def filter_products(self, html):
+    def filter_products(self, html: str | None) -> list:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             supermarket_category_products = []
@@ -97,7 +101,7 @@ class Morrisons(Supermarkets):
             log.error(f"Page was not found: product html for {self.name} was not passed correctly")
             return []
 
-    def filter_product_details(self, html):
+    def filter_product_details(self, html: str | None) -> dict | None:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             allergy_list = []
@@ -131,7 +135,7 @@ class Morrisons(Supermarkets):
             log.error(f"Page was not found: product information html for {self.name} was not passed correctly")
             return None
 
-    def format_nutritional_information(self, nutrition_text):
+    def format_nutritional_information(self, nutrition_text: bs4.element.Tag) -> list:
         # List to store formatted nutritional information
         nutritional_information = []
         try:
@@ -169,8 +173,9 @@ class Morrisons(Supermarkets):
             formatted_values = ['0', '0', '0', '0', '0', '0', '0', '0', '0']
             return formatted_values
 
-    def get_nutrition_pattern(self):
+    def get_nutrition_pattern(self) -> str:
         # Regular expression pattern to match nutritional information
         return (r"([(]?[kK][jJ][)]?|[(]?kcal[)]?|Fat|of which Saturates|Carbohydrate|of which "
                 r"Sugars|Fibre|Protein|Salt)([\s]?[<]?\d\d\d|[\s]?[<]?\d+[.]?\d+)")
+
 

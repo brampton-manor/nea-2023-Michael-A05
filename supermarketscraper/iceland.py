@@ -16,11 +16,11 @@ class Iceland(Supermarkets):
         self.base_url = "https://www.iceland.co.uk/"
         log.info(f"{self.name} loaded")
 
-    def build_url(self, url, page):
+    def build_url(self, url: str, page: int) -> str:
         multiplier = 25
         return url + f"?start={page * multiplier}"
 
-    def filter_categories(self, html):
+    def filter_categories(self, html: str | None) -> list:
         if html is not None:
 
             soup = BeautifulSoup(html, "html.parser")
@@ -46,7 +46,7 @@ class Iceland(Supermarkets):
             log.error(f"Page was not found: category html for {self.name} was not passed correctly")
             return []
 
-    def filter_products(self, html):
+    def filter_products(self, html: str | None) -> list:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             supermarket_category_products = []
@@ -85,7 +85,7 @@ class Iceland(Supermarkets):
             log.error(f"Page was not found: product html for {self.name} was not passed correctly")
             return []
 
-    def filter_product_details(self, html):
+    def filter_product_details(self, html: str | None) -> dict | None:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             allergy_list = []
@@ -129,10 +129,10 @@ class Iceland(Supermarkets):
             log.error(f"Page was not found: product information html for {self.name} was not passed correctly")
             return None
 
-    def format_nutritional_information(self, values):
+    def format_nutritional_information(self, nutritional_values: list) -> list:
         try:
-            formatted_values = [values[0].replace("kJ", ""), values[1].replace("kcal", "")]
-            for value in values[2:]:
+            formatted_values = [nutritional_values[0].replace("kJ", ""), nutritional_values[1].replace("kcal", "")]
+            for value in nutritional_values[2:]:
                 formatted_values.append(value.replace("g", ""))
             return formatted_values
 

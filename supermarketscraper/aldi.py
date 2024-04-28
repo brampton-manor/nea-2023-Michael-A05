@@ -17,10 +17,10 @@ class Aldi(Supermarkets):
         self.base_url = "https://groceries.aldi.co.uk"
         log.info(f"{self.name} loaded")
 
-    def build_url(self, url, page):
+    def build_url(self, url: str, page: int) -> str:
         return url + f"&page={page}"
 
-    def filter_categories(self, html):
+    def filter_categories(self, html: str | None) -> list:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             supermarket_categories = []
@@ -54,7 +54,7 @@ class Aldi(Supermarkets):
             log.error(f"Page was not found: category html for {self.name} was not passed correctly")
             return []
 
-    def filter_products(self, html):
+    def filter_products(self, html: str | None) -> list:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             supermarket_category_products = []
@@ -96,7 +96,7 @@ class Aldi(Supermarkets):
             log.error(f"Page was not found: product html for {self.name} was not passed correctly")
             return []
 
-    def filter_product_details(self, html):
+    def filter_product_details(self, html: str | None) -> dict | None:
         if html is not None:
             soup = BeautifulSoup(html, "html.parser")
             allergy_list = []
@@ -136,7 +136,7 @@ class Aldi(Supermarkets):
             log.error(f"Page was not found: product information html for {self.name} was not passed correctly")
             return None
 
-    def format_nutritional_information(self, nutrition_text):
+    def format_nutritional_information(self, nutrition_text: str) -> list:
         # List to store formatted nutritional values
         formatted_values = []
         # Extract matches from the nutrition text using a regular expression
@@ -197,8 +197,7 @@ class Aldi(Supermarkets):
 
         return formatted_values
 
-    def get_nutrition_pattern(self):
+    def get_nutrition_pattern(self) -> str:
         # Regular expression pattern to match nutritional information
         return (r"(Fat|of which saturates|Carbohydrate|of which sugars|Fibre|Protein|Salt)(\s+[<]?\d+[.]?\d+|\s+\d+)|("
                 r"\d+[.]?[kK][jJ]|\d+[.]?kcal)")
-

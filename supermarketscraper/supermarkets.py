@@ -1,6 +1,8 @@
 import logging
 import re
 
+import sqlalchemy.sql.schema
+
 from database import Database
 
 db = Database()
@@ -18,23 +20,23 @@ class Supermarkets:
         self.allergens = self.get_allergens()
         self.nutrition_pattern = self.get_nutrition_pattern()
 
-    def build_url(self, url, page):
+    def build_url(self, url: str, page: int) -> str:
         # Abstract method to build a URL for a specific page
         return ""
 
-    def filter_categories(self, html):
+    def filter_categories(self, html: str | None) -> list:
         # Abstract method to filter supermarket categories from HTML content
         return []
 
-    def filter_products(self, html):
+    def filter_products(self, html: str | None) -> list:
         # Abstract method to filter supermarket products from HTML content
         return []
 
-    def filter_product_details(self, html):
+    def filter_product_details(self, html: str | None) -> dict:
         # Abstract method to filter products from HTML content
         return {}
 
-    def assign_product_values(self, nutritional_values, allergens):
+    def assign_product_values(self, nutritional_values: list, allergens: list) -> dict | None:
         # Method to assign the values of a products nutritional information
         product_details = {}
 
@@ -61,7 +63,7 @@ class Supermarkets:
             log.error(f"An error occurred while trying to process product details for a {self.name} product: {ex}")
             return None
 
-    def assign_default_values(self, allergens):
+    def assign_default_values(self, allergens: list) -> dict:
         # Method to assign default values for a products nutritional information if the data wasn't available
         log.info(f"Assigning default values")
         product_details = {'energy_kj': 0.0, 'energy_kcal': 0.0, 'fat': 0.0, 'of_which_saturates': 0.0,
@@ -69,29 +71,33 @@ class Supermarkets:
                            'allergens': allergens}
         return product_details
 
-    def format_product_image_src(self, src):
+    def format_product_image_src(self, src: str) -> str:
         # Method to format product image source URLs
-        return src.replace("\\", "/")
+        return src.replace("\\\\", "/").replace("\\", "/")
 
-    def format_product_price_pence(self, price_string):
+    def format_product_price_pence(self, price_string: str) -> float:
         # Method to format the prices of products where the respective string contains a pence symbol
         return float(price_string.replace("p", ""))
 
-    def format_product_price_pound(self, price_string):
+    def format_product_price_pound(self, price_string: str) -> float:
         # Method to format the prices of products where the respective string contains a pound symbol
         return float(price_string.replace("£", ""))
 
-    def format_supermarket_category_products(self, product_list):
+    def format_supermarket_category_products(self, product_list: list) -> list:
         # Method to format supermarket product information
         for product in product_list:
-            product.update({'image': self.format_product_image_src(product['image'])})
+            try:
+                product.update({'image': self.format_product_image_src(product['image'])})
+            except KeyError:
+                log.warning(f"Product {product['name']} has no image")
+                continue
         return product_list
 
-    def format_nutritional_information(self, nutrition_text):
+    def format_nutritional_information(self, nutrition_text: str) -> list:
         # Abstract method to format supermarket product nutritional information
         return ['0', '0', '0', '0', '0', '0', '0', '0', '0']
 
-    def get_id(self):
+    def get_id(self) -> int | None:
         # Method to get the ID of a supermarket from the database
         try:
             supermarket_object = db.get_table_object("supermarkets")
@@ -104,7 +110,7 @@ class Supermarkets:
             log.error(f"Error retrieving ID for {self.name}: {e}")
             return None
 
-    def get_categories(self):
+    def get_categories(self) -> sqlalchemy.sql.schema.Table | list:
         # Method to get the categories of a supermarket
         try:
             supermarket_id = self.get_id()
@@ -118,7 +124,7 @@ class Supermarkets:
             log.exception(f"Error retrieving categories for {self.name}: {e}")
             return []
 
-    def get_category_information(self, category_name):
+    def get_category_information(self, category_name: str) -> tuple:
         # Method to get the ID and part-URL for specific categories
         try:
             supermarket_categories_object = db.get_table_object("supermarket_categories")
@@ -135,13 +141,13 @@ class Supermarkets:
             log.exception(f"Error retrieving category information for '{category_name}': {e}")
             return None, None
 
-    def get_allergens(self):
+    def get_allergens(self) -> list:
         # Method to get a list of common food allergens
         return [
-            "peanuts", "almonds", "walnuts", "cashews", "pistachios", "milk", "eggs", "wheat", "barley", "soy",
+            "peanuts", "almonds", "walnuts", "cashews", "pistachios", "milk", "eggs", "wheat", "barley", "soya",
             "mustard", "lupin", "rye", "sulphites", "fish", "shellfish", "celery", "sesame", "molluscs"
         ]
 
-    def get_nutrition_pattern(self):
+    def get_nutrition_pattern(self) -> str:
         # Abstract method representing the regular expressions used to extract values from nutritional information
         return r""
